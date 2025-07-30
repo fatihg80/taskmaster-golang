@@ -1,4 +1,4 @@
-module github.com/fatihg80/kanban
+module github.com/fatihg80/taskmaster-golang
 
 go 1.23.3
 
