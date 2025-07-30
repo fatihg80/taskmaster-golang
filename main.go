@@ -2,47 +2,87 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"database/sql"
 	"log"
 	"net/http"
+	"os"
 	"github.com/justinas/alice"
-
 	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
+	"github.com/joho/godotenv"
 )
+
+
+
+type App struct {
+	DB *sql.DB
+}
+
+type Credentials struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+type UserResponse struct {
+	XataID string `json:"xata_id,omitempty"`
+	Username string `json:"username,omitempty"`
+
+}	
+
+type ErrorResponse struct {
+	Message string `json:"message"`
+	
+}
+
+
 
 type RouterResponse struct {
 	Message string `json:"message"`
 }
 
+
+
 const contentTypeJSON = "application/json"
 
 const projectByIDRoute = "/project/{id}"
 
+
+
+
+
 func main() {
 	router := mux.NewRouter()
-	
-	// Middleware to log requests and handle authentication
-	// router.Use(Middleware)
-	// // Middleware to handle CORS (Cross-Origin Resource Sharing)
-	// router.Use(func(next http.Handler) http.Handler {
-	// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 		w.Header().Set("Access-Control-Allow-Origin", "*")
-	// 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-	// 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-	// 		if r.Method == http.MethodOptions {
-	// 			w.WriteHeader(http.StatusOK)
-	// 			return
-	// 		}
-	// 	})
-	// })
 
-
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	
+	connStr := os.Getenv("XATA_PSQL_URL")
+	if len(connStr) == 0 {
+		log.Fatalf("XATA_PSQL_URL environment variable is not set")
+	}
+
+
+
+	DB, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatal("Error connecting to the database:", err)
+	}
+
+	defer DB.Close()
+
+
+	app := &App{
+		DB: DB,
+	}
 
 
 
 
-	// Define routes and associate them with handlers
+
 
 
 	
@@ -62,16 +102,14 @@ func main() {
 
 
 
-// LOGIN MIDDLEWARE
 
 func LoginMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Placeholder for authentication logic
-		// In a real application, you would check the user's credentials here
+		
 		log.Println("#### Middleware executed ####")
-		log.Printf("%s %s %s", r.Method, r.URL.Path, r.RemoteAddr) // Log the request method and path 
-		w.Header().Set("Content-Type", contentTypeJSON) // Set the content type for the response
-		next.ServeHTTP(w, r) // Call the next handler in the chain
+		log.Printf("%s %s %s", r.Method, r.URL.Path, r.RemoteAddr) 
+		w.Header().Set("Content-Type", contentTypeJSON) 
+		next.ServeHTTP(w, r) 
 		log.Println("#### Middleware completed ####") 
 	})
 }
@@ -80,16 +118,22 @@ func LoginMiddleware(next http.Handler) http.Handler {
 
 
 
-// Handlers for various routes
 
-
-
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	sendJSONResponse(w, RouterResponse{Message: "Welcome To Projects Kanban API MAZIN"})
+func homeHandler(w http.ResponseWriter, r *http.Request) {	sendJSONResponse(w, RouterResponse{Message: "Welcome To Projects Kanban API xxx"})
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
-	sendJSONResponse(w, RouterResponse{Message: "Register Endpoint Hit"})
+    var credentials Credentials
+    if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
+        w.Header().Set("Content-Type", contentTypeJSON)
+        json.NewEncoder(w).Encode(ErrorResponse{Message: "Invalid request payload"})
+        log.Println("Error decoding request body:", err)
+        return
+    }
+
+    w.Header().Set("Content-Type", contentTypeJSON)
+    json.NewEncoder(w).Encode(RouterResponse{Message: "Register Endpoint Hitx"})
+    log.Println("Register endpoint hit")
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -97,26 +141,26 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func createProjectHandler(w http.ResponseWriter, r *http.Request) {
-	sendJSONResponse(w, RouterResponse{Message: "Create Project Endpoint Hit"})
+	sendJSONResponse(w, RouterResponse{Message: "Create Project Endpoint Hitx"})
 }
 
 func getProjectsHandler(w http.ResponseWriter, r *http.Request) {
-	sendJSONResponse(w, RouterResponse{Message: "Get All Projects Endpoint Hit"})
+	sendJSONResponse(w, RouterResponse{Message: "Get All Projects Endpoint Hitx"})
 }
 
 func getProjectHandler(w http.ResponseWriter, r *http.Request) {
-	sendJSONResponse(w, RouterResponse{Message: "Get Project By ID Endpoint Hit"})
+	sendJSONResponse(w, RouterResponse{Message: "Get Project By ID Endpoint Hitx"})
 }
 
 func updateProjectHandler(w http.ResponseWriter, r *http.Request) {
-	sendJSONResponse(w, RouterResponse{Message: "Update Project By ID Endpoint Hit"})
+	sendJSONResponse(w, RouterResponse{Message: "Update Project By ID Endpoint Hitx"})
 }
 
 func deleteProjectHandler(w http.ResponseWriter, r *http.Request) {
-	sendJSONResponse(w, RouterResponse{Message: "Delete Project By ID Endpoint Hit"})
+	sendJSONResponse(w, RouterResponse{Message: "Delete Project By ID Endpoint Hitx"})
 }
 
-// Helper function to send JSON responses
+
 func sendJSONResponse(w http.ResponseWriter, response RouterResponse) {
 	w.Header().Set("Content-Type", contentTypeJSON)
 	json.NewEncoder(w).Encode(response)
