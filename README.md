@@ -36,6 +36,9 @@ psql taskmaster -f migrations/001_init.sql
 cp .env.example .env
 nano .env  # Edit your DB credentials
 
+JWT_SECRET_KEY=super_secret_stuff
+POSTGRES_CONN_URL=postgresql://<YOUR_ACCOUNT>:<YOUR_API_KEY>@<YOUR_REGION>.sql.xata.sh/<YOUR_DATABASE_NAME>:main?sslmode=require
+
 # 4. Install dependencies
 go mod download
 
